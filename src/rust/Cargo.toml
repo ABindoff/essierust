@@ -1,0 +1,16 @@
+[package]
+name    = "essierust"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+# R packages need a static library; the DLL/so is built by R's own linker.
+crate-type = ["staticlib"]
+
+[dependencies]
+extendr-api = { version = "0.7" }
+
+[profile.release]
+# Maximum optimisation for the release build used by R CMD INSTALL.
+opt-level = 3
+lto        = true

@@ -1,0 +1,28 @@
+# Windows build — targets the MinGW toolchain that R's own compiler uses.
+TARGET = $(subst 64,x86_64,$(subst 32,i686,$(WIN)))-pc-windows-gnu
+
+LIBDIR   = ./rust/target/$(TARGET)/release
+STATLIB  = $(LIBDIR)/libessierust.a
+
+# Extra Windows system libs required by the Rust stdlib.
+PKG_LIBS = -L$(LIBDIR) -lessierust -lws2_32 -ladvapi32 -luserenv -lbcrypt -lntdll
+
+# Locate cargo: use CARGO env var if set, otherwise fall back to the
+# default rustup install location under USERPROFILE.
+USERPROFILE_FWD = $(subst \,/,$(USERPROFILE))
+CARGO ?= $(USERPROFILE_FWD)/.cargo/bin/cargo
+
+all: C_clean
+
+$(SHLIB): $(STATLIB)
+
+$(STATLIB):
+	export CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER="$(C_COMPILER)"; \
+	export CFLAGS_x86_64_pc_windows_gnu="$(C_FLAGS)"; \
+	export CARGO_TARGET_I686_PC_WINDOWS_GNU_LINKER="$(C_COMPILER)"; \
+	export CFLAGS_i686_pc_windows_gnu="$(C_FLAGS)"; \
+	$(CARGO) build --target $(TARGET) --lib --release \
+	               --manifest-path=./rust/Cargo.toml
+
+C_clean:
+	rm -Rf $(SHLIB) $(STATLIB) $(OBJECTS)
